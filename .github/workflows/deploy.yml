@@ -6,7 +6,7 @@ on:
 
 env:
   REGISTRY: docker.io
-  IMAGE_NAME: vukpavlicevic2021200670/alati-za-razvoj   # ZAMENI OVO ako ti je drugačije korisničko ime na Docker Hub-u!
+  IMAGE_NAME: vuksingidunum/alati-za-razvoj
 
 jobs:
   build-and-push:
