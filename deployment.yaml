@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: moja-demo-app
+  labels:
+    app: moja-demo-app
+spec:
+  replicas: 3                      # Pokrećemo 3 kopije za visoku dostupnost
+  selector:
+    matchLabels:
+      app: moja-demo-app
+  template:
+    metadata:
+      labels:
+        app: moja-demo-app
+    spec:
+      containers:
+      - name: moja-demo-app
+        image: moja-demo-app:1.0   # Ime slike koju smo napravili
+        imagePullPolicy: IfNotPresent # Ne ide na internet, koristi lokalnu sliku
+        ports:
+        - containerPort: 5000
+        env:
+        - name: MESSAGE
+          value: "Pozdrav iz Kubernetes klastera!"  # Ovo će se pojaviti u JSON odgovoru
+        # Liveness Probe - K8s proverava da li je aplikacija živa
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 5000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        # Readiness Probe - K8s proverava da li je aplikacija spremna da prima saobraćaj
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 5000
+          initialDelaySeconds: 3
+          periodSeconds: 5

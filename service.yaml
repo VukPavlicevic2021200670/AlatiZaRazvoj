@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: moja-demo-app-service
+spec:
+  selector:
+    app: moja-demo-app           # Povezuje se sa Deploymentom iznad
+  ports:
+  - protocol: TCP
+    port: 80                     # Port na koji ćemo slati zahteve spolja
+    targetPort: 5000             # Port na kom radi naša aplikacija u kontejneru
+  type: ClusterIP                # Ovo će biti dostupno samo unutar klastera (za sada)
