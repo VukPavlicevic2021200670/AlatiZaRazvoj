@@ -10,7 +10,7 @@ def hello():
     message = os.getenv('MESSAGE', 'Zdravo svete, ovo je test12!')
     return jsonify({
         "message": message,
-        "version": "1.1",
+        "version": "1.2",
         "timestamp": datetime.datetime.now().isoformat(),
         "hostname": os.getenv('HOSTNAME', 'nepoznat')
     })
