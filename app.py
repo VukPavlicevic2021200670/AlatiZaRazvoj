@@ -7,7 +7,7 @@ app = Flask(__name__)
 @app.route('/')
 def hello():
     # Očitavamo promenljivu iz okruženja (kasnije ćemo je podesiti u Kubernetesu)
-    message = os.getenv('MESSAGE', 'Zdravo svete!')
+    message = os.getenv('MESSAGE', 'Zdravo svete, ovo je test!')
     return jsonify({
         "message": message,
         "version": "1.0",
