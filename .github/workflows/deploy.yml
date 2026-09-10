@@ -4,35 +4,35 @@ on:
   push:
     branches: [ "main" ]
 
-env:
-  REGISTRY: docker.io
-  IMAGE_NAME: vuksingidunum/alati-za-razvoj
-
 jobs:
-  build-and-push:
-    name: Build and Push Docker Image
+  # ============================================================
+  # JOB 1: Build i učitavanje slike u kind
+  # ============================================================
+  build:
+    name: Build & Load Image
     runs-on: self-hosted
-    outputs:
-      image_tag: ${{ github.sha }}
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
 
     - name: Build Docker image
       run: |
-        docker build -t ${{ env.IMAGE_NAME }}:${{ github.sha }} .
-        docker tag ${{ env.IMAGE_NAME }}:${{ github.sha }} ${{ env.IMAGE_NAME }}:latest
+        docker build -t moja-demo-app:latest .
+        docker tag moja-demo-app:latest moja-demo-app:${{ github.sha }}
 
     - name: Load image into Kind cluster
       run: |
-        kind load docker-image ${{ env.IMAGE_NAME }}:${{ github.sha }} --name moj-klaster
-        kind load docker-image ${{ env.IMAGE_NAME }}:latest --name moj-klaster
+        kind load docker-image moja-demo-app:latest --name moj-klaster
 
+  # ============================================================
+  # JOB 2: Deploy na STAGING (automatski, bez odobrenja)
+  # ============================================================
   deploy-staging:
     name: Deploy to STAGING
-    needs: build-and-push
+    needs: build                    # Čeka da build uspe
     runs-on: self-hosted
-    environment: staging
+    environment:
+      name: staging                 # GitHub Environment "staging" (bez approval-a)
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
@@ -43,14 +43,19 @@ jobs:
         kubectl rollout restart deployment/moja-demo-app -n staging
         kubectl rollout status deployment/moja-demo-app -n staging --timeout=120s
 
-    - name: Show staging pods
-      run: kubectl get pods -n staging
+    - name: Show staging status
+      run: |
+        kubectl get pods -n staging
 
+  # ============================================================
+  # JOB 3: Deploy na PRODUCTION (čeka RUČNO ODOBRENJE)
+  # ============================================================
   deploy-production:
     name: Deploy to PRODUCTION
-    needs: deploy-staging                  # Čeka da staging uspe!
+    needs: deploy-staging           # Čeka da staging uspe!
     runs-on: self-hosted
-    environment: production                # Traži ručnu odobrenje
+    environment:
+      name: production              # GitHub Environment "production" (SA approval-om)
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
@@ -61,5 +66,6 @@ jobs:
         kubectl rollout restart deployment/moja-demo-app -n production
         kubectl rollout status deployment/moja-demo-app -n production --timeout=120s
 
-    - name: Show production pods
-      run: kubectl get pods -n production
+    - name: Show production status
+      run: |
+        kubectl get pods -n production
