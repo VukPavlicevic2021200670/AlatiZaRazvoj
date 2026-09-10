@@ -1,40 +1,65 @@
-name: CI/CD Pipeline - Build and Deploy (local)
+name: CI/CD Pipeline - Staging & Production
 
 on:
   push:
     branches: [ "main" ]
 
-jobs:
-  build-and-deploy:
-    runs-on: self-hosted
+env:
+  REGISTRY: docker.io
+  IMAGE_NAME: vuksingidunum/alati-za-razvoj
 
+jobs:
+  build-and-push:
+    name: Build and Push Docker Image
+    runs-on: self-hosted
+    outputs:
+      image_tag: ${{ github.sha }}
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
 
     - name: Build Docker image
       run: |
-        docker build -t moja-demo-app:latest .
-        docker tag moja-demo-app:latest moja-demo-app:${{ github.sha }}
+        docker build -t ${{ env.IMAGE_NAME }}:${{ github.sha }} .
+        docker tag ${{ env.IMAGE_NAME }}:${{ github.sha }} ${{ env.IMAGE_NAME }}:latest
 
     - name: Load image into Kind cluster
       run: |
-        kind load docker-image moja-demo-app:latest --name moj-klaster
+        kind load docker-image ${{ env.IMAGE_NAME }}:${{ github.sha }} --name moj-klaster
+        kind load docker-image ${{ env.IMAGE_NAME }}:latest --name moj-klaster
 
-    - name: Deploy to Kind
-      run: |
-        kubectl apply -f deployment.yaml
-        kubectl apply -f service.yaml
+  deploy-staging:
+    name: Deploy to STAGING
+    needs: build-and-push
+    runs-on: self-hosted
+    environment: staging
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
 
-    - name: Restart deployment
+    - name: Deploy to staging namespace
       run: |
-        kubectl rollout restart deployment/moja-demo-app
+        kubectl apply -k k8/overlays/staging/
+        kubectl rollout restart deployment/moja-demo-app -n staging
+        kubectl rollout status deployment/moja-demo-app -n staging --timeout=120s
 
-    - name: Wait for rollout
-      run: |
-        kubectl rollout status deployment/moja-demo-app --timeout=120s
+    - name: Show staging pods
+      run: kubectl get pods -n staging
 
-    - name: Show pod status
+  deploy-production:
+    name: Deploy to PRODUCTION
+    needs: deploy-staging                  # Čeka da staging uspe!
+    runs-on: self-hosted
+    environment: production                # Traži ručnu odobrenje
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Deploy to production namespace
       run: |
-        kubectl get pods
-        kubectl get services
+        kubectl apply -k k8/overlays/production/
+        kubectl rollout restart deployment/moja-demo-app -n production
+        kubectl rollout status deployment/moja-demo-app -n production --timeout=120s
+
+    - name: Show production pods
+      run: kubectl get pods -n production
