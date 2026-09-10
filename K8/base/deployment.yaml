@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: moja-demo-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: moja-demo-app
+  template:
+    metadata:
+      labels:
+        app: moja-demo-app
+    spec:
+      containers:
+      - name: moja-demo-app
+        image: moja-demo-app:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 5000
+        env:
+        - name: ENVIRONMENT
+          value: "unknown"
+        - name: MESSAGE
+          value: "Pozdrav!"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 5000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 5000
+          initialDelaySeconds: 3
+          periodSeconds: 5

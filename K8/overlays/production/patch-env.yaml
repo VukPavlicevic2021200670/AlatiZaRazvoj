@@ -1,0 +1,14 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: moja-demo-app
+spec:
+  template:
+    spec:
+      containers:
+      - name: moja-demo-app
+        env:
+        - name: ENVIRONMENT
+          value: "PRODUCTION"
+        - name: MESSAGE
+          value: "Dobrodosli u PRODUCTION!"
