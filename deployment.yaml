@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: moja-demo-app
-        image: moja-demo-app:1.0   # Ime slike koju smo napravili
+        image: moja-demo-app:latest
         imagePullPolicy: IfNotPresent # Ne ide na internet, koristi lokalnu sliku
         ports:
         - containerPort: 5000
