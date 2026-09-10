@@ -22,7 +22,7 @@ spec:
         - containerPort: 5000
         env:
         - name: MESSAGE
-          value: "Pozdrav iz Kubernetes klastera, test1!"  # Ovo će se pojaviti u JSON odgovoru
+          value: "Pozdrav iz Kubernetes klastera, test!"  # Ovo će se pojaviti u JSON odgovoru
         # Liveness Probe - K8s proverava da li je aplikacija živa
         livenessProbe:
           httpGet:
